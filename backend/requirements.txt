@@ -1,0 +1,10 @@
+flask
+flask-cors
+scikit-learn
+pandas
+numpy
+joblib
+flask-jwt-extended
+flask-bcrypt
+flask-sqlalchemy
+Pillow
