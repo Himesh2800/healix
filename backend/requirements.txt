@@ -8,3 +8,5 @@ flask-jwt-extended
 flask-bcrypt
 flask-sqlalchemy
 Pillow
+gunicorn
+
