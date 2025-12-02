@@ -6,19 +6,6 @@ from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_identity,
     set_access_cookies, unset_jwt_cookies
 )
-import joblib
-import numpy as np
-import os
-from datetime import timedelta, datetime
-from remedies_data import remedies_data
-
-app = Flask(__name__)
-
-CORS(app, supports_credentials=True, origins=["https://healixv2.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173"])
-
-# Database Model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     predictions = db.relationship('Prediction', backref='user', lazy=True)
