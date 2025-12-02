@@ -1,18 +1,3 @@
-from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import (
-    JWTManager, create_access_token, jwt_required, get_jwt_identity,
-    set_access_cookies, unset_jwt_cookies
-)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    predictions = db.relationship('Prediction', backref='user', lazy=True)
-
-class Prediction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     disease = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     symptoms = db.Column(db.Text, nullable=False) # Storing as comma-separated string
