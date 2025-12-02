@@ -29,7 +29,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+CORS(app, supports_credentials=True, origins=["https://healixv2.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173"])
 
 # Database Model
 class User(db.Model):
