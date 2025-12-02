@@ -14,21 +14,6 @@ from remedies_data import remedies_data
 
 app = Flask(__name__)
 
-# Configuration
-app.config['SECRET_KEY'] = 'super-secret-key-change-this-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'jwt-secret-key-change-this-in-production'
-app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['JWT_COOKIE_CSRF_PROTECT'] = False # Simplified for this demo, enable in prod
-app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-
-# Extensions
-db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
 CORS(app, supports_credentials=True, origins=["https://healixv2.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173"])
 
 # Database Model
