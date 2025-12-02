@@ -1,3 +1,62 @@
+from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, get_jwt_identity,
+    set_access_cookies, unset_jwt_cookies
+)
+import joblib
+import numpy as np
+import os
+from datetime import timedelta, datetime
+from remedies_data import remedies_data
+
+app = Flask(__name__)
+
+# Configuration
+app.config['SECRET_KEY'] = 'super-secret-key-change-this-in-production'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'jwt-secret-key-change-this-in-production'
+app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+app.config['JWT_COOKIE_SECURE'] = True
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.config['JWT_COOKIE_SAMESITE'] = 'None'
+
+# Extensions
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
+CORS(app, supports_credentials=True, origins=["https://healixv2.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173"])
+
+# Database Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    predictions = db.relationship('Prediction', backref='user', lazy=True)
+
+class Prediction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    disease = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    symptoms = db.Column(db.Text, nullable=False)
+
+class DietPlan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    plan_data = db.Column(db.Text, nullable=False)
+    goal = db.Column(db.String(50), nullable=False)
+
+class ExerciseLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     exercise_type = db.Column(db.String(100), nullable=False)
     duration_minutes = db.Column(db.Integer, nullable=False)
@@ -8,8 +67,8 @@ class UserProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
     age = db.Column(db.Integer)
     gender = db.Column(db.String(20))
-    height = db.Column(db.Float) # cm
-    weight = db.Column(db.Float) # kg
+    height = db.Column(db.Float)
+    weight = db.Column(db.Float)
     blood_type = db.Column(db.String(5))
     allergies = db.Column(db.String(200))
 
@@ -19,7 +78,7 @@ class SkinAnalysisLog(db.Model):
     date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     condition_name = db.Column(db.String(100), nullable=False)
     probability = db.Column(db.Float, nullable=False)
-    image_path = db.Column(db.String(200)) # Optional: store path if we were saving images
+    image_path = db.Column(db.String(200))
 
 class EmergencyContact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -28,10 +87,21 @@ class EmergencyContact(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120))
 
-# ... (Load models section)
+# Load Models
+try:
+    models = joblib.load('models/disease_prediction_models.pkl')
+    symptoms_list = joblib.load('models/symptoms_list.pkl')
+    print("Models loaded successfully.")
+except Exception as e:
+    print(f"Error loading models: {e}")
+    models = None
+    symptoms_list = []
 
-# ... (Auth routes)
+# Initialize DB
+with app.app_context():
+    db.create_all()
 
+# Routes
 @app.route('/generate-diet', methods=['POST'])
 @jwt_required()
 def generate_diet():
@@ -125,20 +195,7 @@ def generate_diet():
         print(f"Error saving diet plan: {e}")
         
     return jsonify(plan)
-try:
-    models = joblib.load('models/disease_prediction_models.pkl')
-    symptoms_list = joblib.load('models/symptoms_list.pkl')
-    print("Models loaded successfully.")
-except Exception as e:
-    print(f"Error loading models: {e}")
-    models = None
-    symptoms_list = []
 
-# Initialize DB
-with app.app_context():
-    db.create_all()
-
-# Auth Routes
 @app.route('/auth/register', methods=['POST'])
 def register():
     data = request.json
@@ -345,7 +402,6 @@ def predict_skin():
         {'name': 'Healthy Skin', 'recommendation': 'Keep up the good work! Maintain your routine.', 'probability': 95}
     ]
     
-    result = random.choice(conditions)
     result = random.choice(conditions)
     
     # Save to SkinAnalysisLog
