@@ -9,4 +9,8 @@ flask-bcrypt
 flask-sqlalchemy
 Pillow
 gunicorn
+requests
+python-dotenv
+numpy
+beautifulsoup4
 
