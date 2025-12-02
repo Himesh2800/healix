@@ -1,11 +1,4 @@
     date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
-    plan_data = db.Column(db.Text, nullable=False) # JSON string of the plan
-    goal = db.Column(db.String(50), nullable=False)
-
-class ExerciseLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     exercise_type = db.Column(db.String(100), nullable=False)
     duration_minutes = db.Column(db.Integer, nullable=False)
     calories_burnt = db.Column(db.Integer, nullable=False)
